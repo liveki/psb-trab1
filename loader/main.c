@@ -53,30 +53,31 @@ void aspectCorrection(Img *pic)
 {
     Img newImg;
     int newSize = (pic->width / 4.0) * (pic->height / 5.0); // width: 456 height: 303  364,8 242,4
-    RGB newPixels[4407];
+    RGB newPixels[newSize];
+
     int initialNewPixelIndex = 0; // ÍNDICE QUE CONTROLA o newPixels para armazenar a média ponderada
 
-    int indexColumn = 1;            // ÍNDICE QUE PERCORRE DE 20 EM 20 COLUNAS
-    int totalValuePixelsInARow = 0; //ACUMULADOR DE PIXELS DE UMA LINHA COM 20 COLUNAS
+    // int indexColumn = 1;            // ÍNDICE QUE PERCORRE DE 20 EM 20 COLUNAS
+    // int totalValuePixelsInARow = 0; //ACUMULADOR DE PIXELS DE UMA LINHA COM 20 COLUNAS
 
-    for (int i = 0; i < pic->width * pic->height; i++)
-    {
-        totalValuePixelsInARow += pic->img[i].r;
-        indexColumn++;
+    // for (int i = 0; i < pic->width * pic->height; i++)
+    // {
+    //     totalValuePixelsInARow += pic->img[i].r;
+    //     indexColumn++;
 
-        if (indexColumn == 20)
-        {
-            newPixels[initialNewPixelIndex].r = totalValuePixelsInARow / 20;
-            newPixels[initialNewPixelIndex].g = totalValuePixelsInARow / 20;
-            newPixels[initialNewPixelIndex].b = totalValuePixelsInARow / 20;
-            indexColumn = 1;
-            initialNewPixelIndex++;
-            totalValuePixelsInARow = 0;
-        }
-    }
+    //     if (indexColumn == 20)
+    //     {
+    //         newPixels[initialNewPixelIndex].r = totalValuePixelsInARow / 20;
+    //         newPixels[initialNewPixelIndex].g = totalValuePixelsInARow / 20;
+    //         newPixels[initialNewPixelIndex].b = totalValuePixelsInARow / 20;
+    //         indexColumn = 1;
+    //         initialNewPixelIndex++;
+    //         totalValuePixelsInARow = 0;
+    //     }
+    // }
 
-    pic->width = (pic->width / 4.0);
-    pic->height = (pic->height / 5.0);
+    // pic->width = (pic->width / 4.0);
+    // pic->height = (pic->height / 5.0);
 }
 
 void writeImage(Img *pic)
