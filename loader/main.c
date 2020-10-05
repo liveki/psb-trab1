@@ -49,36 +49,40 @@ void convertToGreyScale(Img *pic)
     }
 }
 
-void aspectCorrection(Img *pic)
+void aspectCorrection(Img *pic1)
 {
-    Img newImg;
-    int newSize = (pic->width / 4.0) * (pic->height / 5.0); // width: 456 height: 303  364,8 242,4
-    RGB newPixels[newSize];
+    //Img newImg;
+    //newImg.width = pic->width / 4.0;
+    //newImg.height = pic->height / 5.0;
+    //int newSize = newImg.width * newImg.height;
+    //printf("%d", newSize);
+    RGB ( * in)[pic1->width] = (RGB( * )[pic1->width]) pic1->img;
+    RGB ( * out)[pic1->width /4] = (RGB( * )[pic1->width/4]) pic1->img;
 
-    int initialNewPixelIndex = 0; // ÍNDICE QUE CONTROLA o newPixels para armazenar a média ponderada
+    int totalPixel = 0;
+    int indexNewPixel = 0;
+    int colunas = 0;
+    int linhas = 0;
 
-    // int indexColumn = 1;            // ÍNDICE QUE PERCORRE DE 20 EM 20 COLUNAS
-    // int totalValuePixelsInARow = 0; //ACUMULADOR DE PIXELS DE UMA LINHA COM 20 COLUNAS
+           for(int i=0; i<pic1->width; i++){
 
-    // for (int i = 0; i < pic->width * pic->height; i++)
-    // {
-    //     totalValuePixelsInARow += pic->img[i].r;
-    //     indexColumn++;
+            for(int j=colunas; j<5; j++){
+                totalPixel = in[i][j].r;
+            }
 
-    //     if (indexColumn == 20)
-    //     {
-    //         newPixels[initialNewPixelIndex].r = totalValuePixelsInARow / 20;
-    //         newPixels[initialNewPixelIndex].g = totalValuePixelsInARow / 20;
-    //         newPixels[initialNewPixelIndex].b = totalValuePixelsInARow / 20;
-    //         indexColumn = 1;
-    //         initialNewPixelIndex++;
-    //         totalValuePixelsInARow = 0;
-    //     }
-    // }
-
-    // pic->width = (pic->width / 4.0);
-    // pic->height = (pic->height / 5.0);
-}
+            if((i+1) %4 ==0){
+                out[linhas][colunas].r = totalPixel/20;
+                totalPixel = 0;
+                linhas++;
+                if(linhas == pic1->width / 4){
+                    linhas =0;
+                    colunas++;
+                }
+            }
+        }
+          
+SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic1->width/4, pic1->height/5, 3, (const unsigned char *)out);
+    }
 
 void writeImage(Img *pic)
 {
@@ -174,9 +178,9 @@ int main(int argc, char **argv)
 
     aspectCorrection(&pic);
 
-    writeImage(&pic);
+    //writeImage(&pic);
 
-    SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+    //SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
 
     free(pic.img);
 }
