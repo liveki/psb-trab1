@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> // Para usar strings
+#include <stdbool.h>
 
 // SOIL é a biblioteca para leitura das imagens
 #include "SOIL.h"
@@ -51,38 +52,40 @@ void convertToGreyScale(Img *pic)
 
 void aspectCorrection(Img *pic1)
 {
-    //Img newImg;
-    //newImg.width = pic->width / 4.0;
-    //newImg.height = pic->height / 5.0;
-    //int newSize = newImg.width * newImg.height;
-    //printf("%d", newSize);
-    RGB ( * in)[pic1->width] = (RGB( * )[pic1->width]) pic1->img;
-    RGB ( * out)[pic1->width /4] = (RGB( * )[pic1->width/4]) pic1->img;
+    printf("entrei na funcao \n");
 
-    int totalPixel = 0;
-    int indexNewPixel = 0;
-    int colunas = 0;
-    int linhas = 0;
+    RGB(*in)
+    [pic1->width] = (RGB(*)[pic1->width])pic1->img;
+    int novaLargura = pic1->width / 4;
+    int novaAltura = pic1->height / 5;
+    RGB out[novaLargura * novaAltura];
+    int colunaMaximaAtual = 4;
+    int pixelAcumulado = 0;
+    int posicaoAtualOut = 0;
 
-           for(int i=0; i<pic1->width; i++){
+    for(int i = 0; i < pic1->height; i++) {
 
-            for(int j=colunas; j<5; j++){
-                totalPixel = in[i][j].r;
-            }
+        for(int j = colunaMaximaAtual -4; j < colunaMaximaAtual; j++) {
 
-            if((i+1) %4 ==0){
-                out[linhas][colunas].r = totalPixel/20;
-                totalPixel = 0;
-                linhas++;
-                if(linhas == pic1->width / 4){
-                    linhas =0;
-                    colunas++;
-                }
-            }
+            pixelAcumulado += in[i][j].r;
+         
         }
-          
-SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic1->width/4, pic1->height/5, 3, (const unsigned char *)out);
+
+         if(i %5 ==0){
+             out[posicaoAtualOut].r = pixelAcumulado / 20;
+             out[posicaoAtualOut].g = pixelAcumulado / 20;
+             out[posicaoAtualOut].b = pixelAcumulado / 20;
+
+             pixelAcumulado = 0;
+             colunaMaximaAtual += 4;
+             posicaoAtualOut++;
+         }
+
     }
+    printf("cheguei no final \n");
+
+    pic1->img = out;
+}
 
 void writeImage(Img *pic)
 {
@@ -180,7 +183,7 @@ int main(int argc, char **argv)
 
     //writeImage(&pic);
 
-    //SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+    SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
 
     free(pic.img);
 }
