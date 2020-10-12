@@ -22,7 +22,7 @@ typedef struct
 // Protótipos
 void load(char *name, Img *pic);
 void convertToGreyScale(Img *pic);
-void aspectCorrection(Img *pic);
+Img aspectCorrection(Img *pic);
 void writeImage(Img *pic);
 
 // Carrega uma imagem para a struct Img
@@ -50,50 +50,71 @@ void convertToGreyScale(Img *pic)
     }
 }
 
-void aspectCorrection(Img *pic1)
+Img aspectCorrection(Img *pic1)
 {
-    printf("entrei na funcao \n");
-
-    RGB(*in)
-    [pic1->width] = (RGB(*)[pic1->width])pic1->img;
+    //NOVAS MEDIDAS DA IMAGEM DE SAÍDA
     int novaLargura = pic1->width / 4;
     int novaAltura = pic1->height / 5;
-    RGB out[novaLargura * novaAltura];
-    int colunaMaximaAtual = 4;
-    int pixelAcumulado = 0;
-    int posicaoAtualOut = 0;
 
-    for(int i = 0; i < pic1->height; i++) {
+    //PONTEIRO RESPONSÁVEL POR INTERPRETAR O VETOR COMO MATRIZ
+    RGB(*in)
+    [pic1->width] = (RGB(*)[pic1->width])pic1->img;
 
-        for(int j = colunaMaximaAtual -4; j < colunaMaximaAtual; j++) {
+    //ARREDONDANDO MEDIDAS DA IMAGEM PARA REALIZAR A CORREÇÃO DE ASPECTO
+    int larguraArredondada = pic1->width - (pic1->width % 4);
+    int alturaArredondada = pic1->height - (pic1->height % 5);
 
-            pixelAcumulado += in[i][j].r;
-         
+    RGB out[48000];
+    int indiceOut = 0;
+
+    int totalPixelEmUmBloco = 0;
+
+    int colunas = 0;
+    int linhas = 0;
+
+    int linhaInicial = 0;
+    int linhaMaxima = 5;
+
+    for (colunas; colunas < larguraArredondada; colunas++)
+    {
+        //SOMA OS PIXEIS DE 5 LINHAS
+        for (linhas; linhas < linhaMaxima; linhas++)
+            totalPixelEmUmBloco += in[colunas][linhas].r;
+
+        //VERIFICA SE JÁ PERCORREU 4X5 BLOCOS
+        if ((colunas + 1) % 4 == 0)
+        {
+            out[indiceOut].r = totalPixelEmUmBloco / 20;
+            totalPixelEmUmBloco = 0;
+            indiceOut++;
         }
 
-         if(i %5 ==0){
-             out[posicaoAtualOut].r = pixelAcumulado / 20;
-             out[posicaoAtualOut].g = pixelAcumulado / 20;
-             out[posicaoAtualOut].b = pixelAcumulado / 20;
+        //VERIFICA SE JÁ PERCORREU TODA A LARGURA DE UMA LINHA
+        if ((colunas + 1) == larguraArredondada)
+        {
+            linhaMaxima += 5;
+            linhaInicial += 5;
+            colunas = 0;
+        }
 
-             pixelAcumulado = 0;
-             colunaMaximaAtual += 4;
-             posicaoAtualOut++;
-         }
-
+        linhas = linhaInicial;
     }
-    printf("cheguei no final \n");
 
-    pic1->img = out;
+    Img newPic;
+    newPic.height = novaAltura;
+    newPic.width = novaLargura;
+    newPic.img = out;
+
+    return newPic;
 }
 
 void writeImage(Img *pic)
 {
     int size = pic->width * pic->height;
 
-    char pixelsinASCII[4407];
+    char pixelsinASCII[48000];
 
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < 48000; i++)
     {
         int greyScale = pic->img[i].r;
 
@@ -130,19 +151,19 @@ void writeImage(Img *pic)
     fprintf(arq, "</style>\n");
     fprintf(arq, "<pre>\n");
 
-    int count = 0;
+    int largura = 0;
 
     for (int i = 0; i < pic->width * pic->height; i++)
     {
         fprintf(arq, "%c", pixelsinASCII[i]);
 
-        if (count == 114)
+        if (largura == 300)
         {
             fprintf(arq, "\n");
-            count = 0;
+            largura = 0;
         }
-
-        count++;
+        else
+            largura++;
     }
 
     fprintf(arq, "</pre>\n");
@@ -171,6 +192,8 @@ int main(int argc, char **argv)
     printf("\n");
     convertToGreyScale(&pic);
 
+    SOIL_save_image("outGreyScale.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+
     printf("Primeiros 10 pixels da imagem em escala de CINZA:\n");
     for (int i = 0; i < 10; i++)
     {
@@ -179,11 +202,11 @@ int main(int argc, char **argv)
 
     printf("\n");
 
-    aspectCorrection(&pic);
+    Img newPic = aspectCorrection(&pic);
 
-    //writeImage(&pic);
+    writeImage(&newPic);
 
-    SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+    SOIL_save_image("outAspectCorrection.bmp", SOIL_SAVE_TYPE_BMP, newPic.width, newPic.height, 3, (const unsigned char *)newPic.img);
 
     free(pic.img);
 }
