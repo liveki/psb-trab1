@@ -64,46 +64,50 @@ Img aspectCorrection(Img *pic1)
     int larguraArredondada = pic1->width - (pic1->width % 4);
     int alturaArredondada = pic1->height - (pic1->height % 5);
 
-    RGB out[48000];
+    RGB out[novaLargura * novaAltura];
     int indiceOut = 0;
 
     int totalPixelEmUmBloco = 0;
 
-    int colunas = 0;
-    int linhas = 0;
+    int colunaMaxima = 4;
+    int colunaInicial = 0;
+    bool chegouFinalVetor = false;
 
-    int linhaInicial = 0;
-    int linhaMaxima = 5;
-
-    for (colunas; colunas < larguraArredondada; colunas++)
-    {
-        //SOMA OS PIXEIS DE 5 LINHAS
-        for (linhas; linhas < linhaMaxima; linhas++)
-            totalPixelEmUmBloco += in[colunas][linhas].r;
-
-        //VERIFICA SE JÁ PERCORREU 4X5 BLOCOS
-        if ((colunas + 1) % 4 == 0)
+    for (int linhas = 0; linhas < alturaArredondada; linhas++)
         {
+            
+        for(int colunas = colunaInicial; colunas < colunaMaxima; colunas++){
+            totalPixelEmUmBloco += in[linhas][colunas].r;
+
+            if((linhas +1) == alturaArredondada && (colunas +1) == larguraArredondada){
+                chegouFinalVetor= true;
+            }
+          
+        }
+
+        if((linhas +1) %5 == 0 ){
             out[indiceOut].r = totalPixelEmUmBloco / 20;
-            totalPixelEmUmBloco = 0;
             indiceOut++;
-        }
+            totalPixelEmUmBloco = 0;
 
-        //VERIFICA SE JÁ PERCORREU TODA A LARGURA DE UMA LINHA
-        if ((colunas + 1) == larguraArredondada)
-        {
-            linhaMaxima += 5;
-            linhaInicial += 5;
-            colunas = 0;
-        }
+            if((linhas +1) == alturaArredondada){
+                linhas = 0;
+                colunaInicial += 4;
+                colunaMaxima += 4;
 
-        linhas = linhaInicial;
+            }                        
+        }
+        if(chegouFinalVetor){
+            break;
+        }
     }
 
     Img newPic;
     newPic.height = novaAltura;
     newPic.width = novaLargura;
     newPic.img = out;
+
+    printf("%s", "estou saindo da funcao");
 
     return newPic;
 }
@@ -112,9 +116,9 @@ void writeImage(Img *pic)
 {
     int size = pic->width * pic->height;
 
-    char pixelsinASCII[48000];
+    char pixelsinASCII[size];
 
-    for (int i = 0; i < 48000; i++)
+    for (int i = 0; i < size; i++)
     {
         int greyScale = pic->img[i].r;
 
