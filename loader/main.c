@@ -72,32 +72,45 @@ Img aspectCorrection(Img *pic1)
     int colunaMaxima = 4;
     int colunaInicial = 0;
     bool chegouFinalVetor = false;
+    int contador = 0;
 
     for (int linhas = 0; linhas < alturaArredondada; linhas++)
-        {
-            
-        for(int colunas = colunaInicial; colunas < colunaMaxima; colunas++){
-            totalPixelEmUmBloco += in[linhas][colunas].r;
+    {
 
-            if((linhas +1) == alturaArredondada && (colunas +1) == larguraArredondada){
-                chegouFinalVetor= true;
+        for (int colunas = colunaInicial; colunas < colunaMaxima; colunas++)
+        {
+            totalPixelEmUmBloco += in[linhas][colunas].r;
+            totalPixelEmUmBloco += in[linhas][colunas].g;
+            totalPixelEmUmBloco += in[linhas][colunas].b;
+            contador++;
+
+            if ((linhas + 1) == alturaArredondada && (colunas + 1) == larguraArredondada)
+            {
+                chegouFinalVetor = true;
             }
-          
         }
 
-        if((linhas +1) %5 == 0 ){
-            out[indiceOut].r = totalPixelEmUmBloco / 20;
+        if ((linhas + 1) % 5 == 0)
+        {
+            int mediaPonderada = totalPixelEmUmBloco / 20;
+
+            out[indiceOut].r = mediaPonderada;
+            out[indiceOut].g = mediaPonderada;
+            out[indiceOut].b = mediaPonderada;
             indiceOut++;
             totalPixelEmUmBloco = 0;
 
-            if((linhas +1) == alturaArredondada){
+            if ((linhas + 1) == alturaArredondada)
+            {
                 linhas = 0;
                 colunaInicial += 4;
                 colunaMaxima += 4;
+            }
 
-            }                        
+            contador = 0;
         }
-        if(chegouFinalVetor){
+        if (chegouFinalVetor)
+        {
             break;
         }
     }
