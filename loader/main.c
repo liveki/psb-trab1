@@ -196,11 +196,15 @@ void writeImageInPixels(Img *pic)
     fprintf(arq, "</style>\n");
     fprintf(arq, "<pre>\n");
 
-    int largura = 1;
+    RGB(*in)
+    [pic->width] = (RGB(*)[pic->width])pic->img;
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < pic->width; i++)
     {
-        fprintf(arq, "%d + ", pic->img[i].r);
+        for (int j = 0; j < pic->height; j++)
+            fprintf(arq, "[%d] + ", in[j][i].r);
+
+        fprintf(arq, "\n");
     }
 
     fprintf(arq, "</pre>\n");
