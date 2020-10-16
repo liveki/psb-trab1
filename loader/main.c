@@ -24,6 +24,7 @@ void load(char *name, Img *pic);
 void convertToGreyScale(Img *pic);
 Img aspectCorrection(Img *pic);
 void writeImage(Img *pic);
+void writeImageInPixels(Img *pic);
 
 // Carrega uma imagem para a struct Img
 void load(char *name, Img *pic)
@@ -69,25 +70,19 @@ Img aspectCorrection(Img *pic1)
 
     int totalPixelEmUmBloco = 0;
 
-    int colunaMaxima = 4;
     int colunaInicial = 0;
+    int colunaMaxima = 4;
     bool chegouFinalVetor = false;
-    int contador = 0;
 
     for (int linhas = 0; linhas < alturaArredondada; linhas++)
     {
-
         for (int colunas = colunaInicial; colunas < colunaMaxima; colunas++)
         {
-            totalPixelEmUmBloco += in[linhas][colunas].r;
-            totalPixelEmUmBloco += in[linhas][colunas].g;
-            totalPixelEmUmBloco += in[linhas][colunas].b;
-            contador++;
+            int pixelAtual = in[linhas][colunas].r;
+            totalPixelEmUmBloco += pixelAtual;
 
             if ((linhas + 1) == alturaArredondada && (colunas + 1) == larguraArredondada)
-            {
                 chegouFinalVetor = true;
-            }
         }
 
         if ((linhas + 1) % 5 == 0)
@@ -106,21 +101,15 @@ Img aspectCorrection(Img *pic1)
                 colunaInicial += 4;
                 colunaMaxima += 4;
             }
-
-            contador = 0;
         }
         if (chegouFinalVetor)
-        {
             break;
-        }
     }
 
     Img newPic;
     newPic.height = novaAltura;
     newPic.width = novaLargura;
     newPic.img = out;
-
-    printf("%s", "estou saindo da funcao");
 
     return newPic;
 }
@@ -174,13 +163,44 @@ void writeImage(Img *pic)
     {
         fprintf(arq, "%c", pixelsinASCII[i]);
 
-        if (largura == 300)
+        if ((largura + 1) == pic->width)
         {
             fprintf(arq, "\n");
             largura = 0;
         }
         else
             largura++;
+    }
+
+    fprintf(arq, "</pre>\n");
+    fprintf(arq, "</body>\n");
+    fprintf(arq, "</html>\n");
+
+    fclose(arq);
+}
+
+void writeImageInPixels(Img *pic)
+{
+    FILE *arq = fopen("saidaEmPixels.html", "w");
+
+    fprintf(arq, "<html>\n");
+    fprintf(arq, "<head>\n");
+    fprintf(arq, "</head>\n");
+    fprintf(arq, "<body style='background: black;' leftmargin=0 topmargin=0> \n");
+    fprintf(arq, "<style> \n");
+    fprintf(arq, "pre  {\n");
+    fprintf(arq, "color: white;\n");
+    fprintf(arq, "font-family: Courier;\n");
+    fprintf(arq, "  font-size: 8px;\n");
+    fprintf(arq, "}\n");
+    fprintf(arq, "</style>\n");
+    fprintf(arq, "<pre>\n");
+
+    int largura = 1;
+
+    for (int i = 0; i < 20; i++)
+    {
+        fprintf(arq, "%d + ", pic->img[i].r);
     }
 
     fprintf(arq, "</pre>\n");
@@ -208,6 +228,8 @@ int main(int argc, char **argv)
 
     printf("\n");
     convertToGreyScale(&pic);
+
+    writeImageInPixels(&pic);
 
     SOIL_save_image("outGreyScale.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
 
