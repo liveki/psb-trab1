@@ -71,27 +71,24 @@ Img aspectCorrection(Img *pic1)
 
     int totalPixelEmUmBloco = 0;
 
-    int indiceLinhaInicial = 0;
-    int indiceLinhaMaxima = 4;
+    int indiceColunaInicial = 0;
+    int indiceColunaMaxima = 4;
     bool chegouFinalVetor = false;
 
     int contador = 1;
 
-    for (int colunas = 0; colunas <= larguraArredondada; colunas++)
+    for (int linhas = 0; linhas < alturaArredondada; linhas++)
     {
-        for (int linhas = indiceLinhaInicial; linhas <= indiceLinhaMaxima; linhas++)
+        for (int colunas = indiceColunaInicial; colunas < indiceColunaMaxima; colunas++)
         {
-            int pixelAtual = in[colunas][linhas].r;
+            int pixelAtual = in[linhas][colunas].r;
             totalPixelEmUmBloco += pixelAtual;
 
-            if (linhas == alturaArredondada && colunas == larguraArredondada)
-            {
+            if ((linhas + 1) == alturaArredondada && (colunas + 1) == larguraArredondada)
                 chegouFinalVetor = true;
-                break;
-            }
         }
 
-        if (contador % 4 == 0)
+        if (contador == 5)
         {
             int mediaPonderada = totalPixelEmUmBloco / 20;
 
@@ -100,13 +97,14 @@ Img aspectCorrection(Img *pic1)
             out[indiceOut].b = mediaPonderada;
             indiceOut++;
             totalPixelEmUmBloco = 0;
+            contador = 0;
         }
 
-        if (colunas == larguraArredondada)
+        if ((linhas + 1) == alturaArredondada)
         {
-            indiceLinhaInicial += 5;
-            indiceLinhaMaxima += 5;
-            colunas = 0;
+            indiceColunaInicial = indiceColunaMaxima;
+            indiceColunaMaxima += 4;
+            linhas = -1;
         }
 
         if (chegouFinalVetor)
@@ -127,29 +125,8 @@ void writeImage(Img *pic)
 {
     int size = pic->width * pic->height;
 
-    char pixelsinASCII[size];
-
-    for (int i = 0; i < size; i++)
-    {
-        int greyScale = pic->img[i].r;
-
-        if (greyScale <= 32)
-            pixelsinASCII[i] = '.';
-        else if (greyScale <= 64)
-            pixelsinASCII[i] = ':';
-        else if (greyScale <= 96)
-            pixelsinASCII[i] = 'c';
-        else if (greyScale <= 128)
-            pixelsinASCII[i] = 'o';
-        else if (greyScale <= 160)
-            pixelsinASCII[i] = 'C';
-        else if (greyScale <= 192)
-            pixelsinASCII[i] = '0';
-        else if (greyScale <= 224)
-            pixelsinASCII[i] = '8';
-        else
-            pixelsinASCII[i] = '@';
-    }
+    RGB(*in)
+    [pic->width] = (RGB(*)[pic->width])pic->img;
 
     FILE *arq = fopen("saida.html", "w");
 
@@ -166,19 +143,28 @@ void writeImage(Img *pic)
     fprintf(arq, "</style>\n");
     fprintf(arq, "<pre>\n");
 
-    int largura = 0;
-
-    for (int i = 0; i < pic->width * pic->height; i++)
+    for (int i = 0; i < pic->height; i++)
     {
-        fprintf(arq, "%c", pixelsinASCII[i]);
-
-        if ((largura + 1) == pic->width)
+        for (int j = 0; j < pic->width; j++)
         {
-            fprintf(arq, "\n");
-            largura = 0;
+            if (in[i][j].r <= 32)
+                fprintf(arq, "%c", '.');
+            else if (in[i][j].r <= 64)
+                fprintf(arq, "%c", ':');
+            else if (in[i][j].r <= 96)
+                fprintf(arq, "%c", 'c');
+            else if (in[i][j].r <= 128)
+                fprintf(arq, "%c", 'o');
+            else if (in[i][j].r <= 160)
+                fprintf(arq, "%c", 'C');
+            else if (in[i][j].r <= 192)
+                fprintf(arq, "%c", '0');
+            else if (in[i][j].r <= 224)
+                fprintf(arq, "%c", '8');
+            else
+                fprintf(arq, "%c", '@');
         }
-        else
-            largura++;
+        fprintf(arq, "\n");
     }
 
     fprintf(arq, "</pre>\n");
@@ -208,10 +194,12 @@ void writeImageInPixels(Img *pic)
     RGB(*in)
     [pic->width] = (RGB(*)[pic->width])pic->img;
 
-    for (int i = 0; i < pic->width; i++)
+    for (int i = 0; i < pic->height; i++)
     {
-        for (int j = 0; j < pic->height; j++)
-            fprintf(arq, "[%d] + ", in[j][i].r);
+        fprintf(arq, "linha %d: ", i);
+
+        for (int j = 0; j < pic->width; j++)
+            fprintf(arq, "[%d] ", in[i][j].r);
 
         fprintf(arq, "\n");
     }
