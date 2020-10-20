@@ -53,39 +53,45 @@ void convertToGreyScale(Img *pic)
 
 Img aspectCorrection(Img *pic1)
 {
-    //NOVAS MEDIDAS DA IMAGEM DE SAÍDA
-    int novaLargura = pic1->width / 4;
-    int novaAltura = pic1->height / 5;
+
+    //ARREDONDANDO MEDIDAS DA IMAGEM PARA REALIZAR A CORREÇÃO DE ASPECTO
+    int larguraArredondada = pic1->width - (pic1->width % 4);
+    int alturaArredondada = pic1->height - (pic1->height % 5);
 
     //PONTEIRO RESPONSÁVEL POR INTERPRETAR O VETOR COMO MATRIZ
     RGB(*in)
     [pic1->width] = (RGB(*)[pic1->width])pic1->img;
 
-    //ARREDONDANDO MEDIDAS DA IMAGEM PARA REALIZAR A CORREÇÃO DE ASPECTO
-    int larguraArredondada = pic1->width - (pic1->width % 4);
-    int alturaArredondada = pic1->height - (pic1->height % 5);
+    //NOVAS MEDIDAS DA IMAGEM DE SAÍDA
+    int novaLargura = larguraArredondada / 4;
+    int novaAltura = alturaArredondada / 5;
 
     RGB out[novaLargura * novaAltura];
     int indiceOut = 0;
 
     int totalPixelEmUmBloco = 0;
 
-    int colunaInicial = 0;
-    int colunaMaxima = 4;
+    int indiceLinhaInicial = 0;
+    int indiceLinhaMaxima = 4;
     bool chegouFinalVetor = false;
 
-    for (int linhas = 0; linhas < alturaArredondada; linhas++)
+    int contador = 1;
+
+    for (int colunas = 0; colunas <= larguraArredondada; colunas++)
     {
-        for (int colunas = colunaInicial; colunas < colunaMaxima; colunas++)
+        for (int linhas = indiceLinhaInicial; linhas <= indiceLinhaMaxima; linhas++)
         {
-            int pixelAtual = in[linhas][colunas].r;
+            int pixelAtual = in[colunas][linhas].r;
             totalPixelEmUmBloco += pixelAtual;
 
-            if ((linhas + 1) == alturaArredondada && (colunas + 1) == larguraArredondada)
+            if (linhas == alturaArredondada && colunas == larguraArredondada)
+            {
                 chegouFinalVetor = true;
+                break;
+            }
         }
 
-        if ((linhas + 1) % 5 == 0)
+        if (contador % 4 == 0)
         {
             int mediaPonderada = totalPixelEmUmBloco / 20;
 
@@ -94,16 +100,19 @@ Img aspectCorrection(Img *pic1)
             out[indiceOut].b = mediaPonderada;
             indiceOut++;
             totalPixelEmUmBloco = 0;
-
-            if ((linhas + 1) == alturaArredondada)
-            {
-                linhas = 0;
-                colunaInicial += 4;
-                colunaMaxima += 4;
-            }
         }
+
+        if (colunas == larguraArredondada)
+        {
+            indiceLinhaInicial += 5;
+            indiceLinhaMaxima += 5;
+            colunas = 0;
+        }
+
         if (chegouFinalVetor)
             break;
+        else
+            contador++;
     }
 
     Img newPic;
