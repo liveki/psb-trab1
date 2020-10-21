@@ -25,6 +25,7 @@ void convertToGreyScale(Img *pic);
 Img aspectCorrection(Img *pic);
 void writeImage(Img *pic);
 void writeImageInPixels(Img *pic);
+void reduceImage(Img *pic, int percentual);
 
 // Carrega uma imagem para a struct Img
 void load(char *name, Img *pic)
@@ -203,6 +204,32 @@ void writeImageInPixels(Img *pic)
     fclose(arq);
 }
 
+void reduceImage(Img *pic, int percentual)
+{
+    int larguraReduzida = pic->width - (pic->width * percentual / 100);
+    int alturaReduzida = pic->height - (pic->height * percentual / 100);
+
+    int posicoesASerPuladas = (pic->width * pic->height) / (larguraReduzida * alturaReduzida);
+
+    RGB *dadosSaida = malloc((larguraReduzida * alturaReduzida) * sizeof *dadosSaida);
+    int indiceOut = 0;
+
+    for (int i = 0; i < pic->width * pic->height; i++)
+    {
+        if ((i + 1) % posicoesASerPuladas == 0)
+        {
+            dadosSaida[indiceOut].r = pic->img[i].r;
+            dadosSaida[indiceOut].g = pic->img[i].g;
+            dadosSaida[indiceOut].b = pic->img[i].b;
+            indiceOut++;
+        }
+    }
+
+    pic->img = dadosSaida;
+    pic->width = larguraReduzida;
+    pic->height = alturaReduzida;
+}
+
 int main(int argc, char **argv)
 {
     Img pic;
@@ -220,6 +247,11 @@ int main(int argc, char **argv)
     }
 
     printf("\n");
+
+    int tamanhoConvertido = atoi(argv[2]);
+    reduceImage(&pic, tamanhoConvertido);
+    SOIL_save_image("outReduceImage.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+
     convertToGreyScale(&pic);
 
     writeImageInPixels(&pic);
