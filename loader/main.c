@@ -53,69 +53,43 @@ void convertToGreyScale(Img *pic)
 
 Img aspectCorrection(Img *pic1)
 {
-
-    //ARREDONDANDO MEDIDAS DA IMAGEM PARA REALIZAR A CORREÇÃO DE ASPECTO
-    int larguraArredondada = pic1->width - (pic1->width % 4);
-    int alturaArredondada = pic1->height - (pic1->height % 5);
-
     //PONTEIRO RESPONSÁVEL POR INTERPRETAR O VETOR COMO MATRIZ
     RGB(*in)
     [pic1->width] = (RGB(*)[pic1->width])pic1->img;
 
-    //NOVAS MEDIDAS DA IMAGEM DE SAÍDA
-    int novaLargura = larguraArredondada / 4;
-    int novaAltura = alturaArredondada / 5;
-
-    RGB out[novaLargura * novaAltura];
+    int totalPixelEmUmBloco = 0;
     int indiceOut = 0;
 
-    int totalPixelEmUmBloco = 0;
+    RGB *out = malloc((pic1->width * pic1->height) * sizeof *out);
+    bool naoPodeMaisPercorrerColuna = false;
 
-    int indiceColunaInicial = 0;
-    int indiceColunaMaxima = 4;
-    bool chegouFinalVetor = false;
-
-    int contador = 1;
-
-    for (int linhas = 0; linhas < alturaArredondada; linhas++)
+    for (int linhaExterna = 0; linhaExterna <= pic1->height; linhaExterna += 5)
     {
-        for (int colunas = indiceColunaInicial; colunas < indiceColunaMaxima; colunas++)
+        for (int colunaExterna = 0; colunaExterna <= pic1->width; colunaExterna += 4)
         {
-            int pixelAtual = in[linhas][colunas].r;
-            totalPixelEmUmBloco += pixelAtual;
+            if (linhaExterna + 5 <= pic1->height && colunaExterna + 4 <= pic1->width)
+            {
+                for (int linhaAtual = linhaExterna; linhaAtual < linhaExterna + 5; linhaAtual++)
+                {
+                    for (int colunaAtual = colunaExterna; colunaAtual < colunaExterna + 4; colunaAtual++)
+                    {
+                        totalPixelEmUmBloco += in[linhaAtual][colunaAtual].r;
+                    }
+                }
 
-            if ((linhas + 1) == alturaArredondada && (colunas + 1) == larguraArredondada)
-                chegouFinalVetor = true;
+                out[indiceOut].r = totalPixelEmUmBloco / 20;
+                out[indiceOut].g = totalPixelEmUmBloco / 20;
+                out[indiceOut].b = totalPixelEmUmBloco / 20;
+                indiceOut++;
+                totalPixelEmUmBloco = 0;
+            }
         }
-
-        if (contador == 5)
-        {
-            int mediaPonderada = totalPixelEmUmBloco / 20;
-
-            out[indiceOut].r = mediaPonderada;
-            out[indiceOut].g = mediaPonderada;
-            out[indiceOut].b = mediaPonderada;
-            indiceOut++;
-            totalPixelEmUmBloco = 0;
-            contador = 0;
-        }
-
-        if ((linhas + 1) == alturaArredondada)
-        {
-            indiceColunaInicial = indiceColunaMaxima;
-            indiceColunaMaxima += 4;
-            linhas = -1;
-        }
-
-        if (chegouFinalVetor)
-            break;
-        else
-            contador++;
     }
 
     Img newPic;
-    newPic.height = novaAltura;
-    newPic.width = novaLargura;
+
+    newPic.width = pic1->width / 4;
+    newPic.height = pic1->height / 5;
     newPic.img = out;
 
     return newPic;
@@ -123,12 +97,40 @@ Img aspectCorrection(Img *pic1)
 
 void writeImage(Img *pic)
 {
-    int size = pic->width * pic->height;
-
     RGB(*in)
     [pic->width] = (RGB(*)[pic->width])pic->img;
 
     FILE *arq = fopen("saida.html", "w");
+
+    int size = pic->width * pic->height;
+
+    char pixelsEmASCII[size];
+    int indiceOut = 0;
+
+    for (int linha = 0; linha < pic->height; linha++)
+    {
+        for (int coluna = 0; coluna < pic->width; coluna++)
+        {
+            if (in[linha][coluna].r <= 32)
+                pixelsEmASCII[indiceOut] = '.';
+            else if (in[linha][coluna].r <= 64)
+                pixelsEmASCII[indiceOut] = ':';
+            else if (in[linha][coluna].r <= 96)
+                pixelsEmASCII[indiceOut] = 'c';
+            else if (in[linha][coluna].r <= 128)
+                pixelsEmASCII[indiceOut] = 'o';
+            else if (in[linha][coluna].r <= 160)
+                pixelsEmASCII[indiceOut] = 'C';
+            else if (in[linha][coluna].r <= 192)
+                pixelsEmASCII[indiceOut] = '0';
+            else if (in[linha][coluna].r <= 224)
+                pixelsEmASCII[indiceOut] = '8';
+            else
+                pixelsEmASCII[indiceOut] = '@';
+
+            indiceOut++;
+        }
+    }
 
     fprintf(arq, "<html>\n");
     fprintf(arq, "<head>\n");
@@ -143,28 +145,18 @@ void writeImage(Img *pic)
     fprintf(arq, "</style>\n");
     fprintf(arq, "<pre>\n");
 
-    for (int i = 0; i < pic->height; i++)
+    int largura = 0;
+
+    for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < pic->width; j++)
+        fprintf(arq, "%c", pixelsEmASCII[i]);
+        largura++;
+
+        if (largura == pic->width)
         {
-            if (in[i][j].r <= 32)
-                fprintf(arq, "%c", '.');
-            else if (in[i][j].r <= 64)
-                fprintf(arq, "%c", ':');
-            else if (in[i][j].r <= 96)
-                fprintf(arq, "%c", 'c');
-            else if (in[i][j].r <= 128)
-                fprintf(arq, "%c", 'o');
-            else if (in[i][j].r <= 160)
-                fprintf(arq, "%c", 'C');
-            else if (in[i][j].r <= 192)
-                fprintf(arq, "%c", '0');
-            else if (in[i][j].r <= 224)
-                fprintf(arq, "%c", '8');
-            else
-                fprintf(arq, "%c", '@');
+            largura = 0;
+            fprintf(arq, "\n");
         }
-        fprintf(arq, "\n");
     }
 
     fprintf(arq, "</pre>\n");
