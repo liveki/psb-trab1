@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h> // Para usar strings
 #include <stdbool.h>
+#include <math.h>
 
 // SOIL é a biblioteca para leitura das imagens
 #include "SOIL.h"
@@ -25,7 +26,7 @@ void convertToGreyScale(Img *pic);
 Img aspectCorrection(Img *pic);
 void writeImage(Img *pic);
 void writeImageInPixels(Img *pic);
-void reduceImage(Img *pic, int percentual);
+Img reduceImage(Img *pic, int percentual);
 
 // Carrega uma imagem para a struct Img
 void load(char *name, Img *pic)
@@ -204,30 +205,44 @@ void writeImageInPixels(Img *pic)
     fclose(arq);
 }
 
-void reduceImage(Img *pic, int percentual)
+Img reduceImage(Img *pic, int percentual)
 {
-    int larguraReduzida = pic->width - (pic->width * percentual / 100);
-    int alturaReduzida = pic->height - (pic->height * percentual / 100);
+    int saltosHorizontais = 2;
+    int saltosVerticais = 2;
 
-    int posicoesASerPuladas = (pic->width * pic->height) / (larguraReduzida * alturaReduzida);
+    RGB(*in)
+    [pic->width] = (RGB(*)[pic->width])pic->img;
 
-    RGB *dadosSaida = malloc((larguraReduzida * alturaReduzida) * sizeof *dadosSaida);
+    int novaLargura = pic->width / 2;
+    int novaAltura = pic->height / 2;
+
+    RGB *out = malloc((novaLargura * novaAltura) * sizeof *out);
     int indiceOut = 0;
 
-    for (int i = 0; i < pic->width * pic->height; i++)
+    for (int linhaOut = 0; linhaOut < pic->height / 2; linhaOut += 2)
     {
-        if ((i + 1) % posicoesASerPuladas == 0)
+        if ((linhaOut + saltosVerticais) < pic->height)
         {
-            dadosSaida[indiceOut].r = pic->img[i].r;
-            dadosSaida[indiceOut].g = pic->img[i].g;
-            dadosSaida[indiceOut].b = pic->img[i].b;
-            indiceOut++;
+            for (int colunaOut = 0; colunaOut < pic->width / 2; colunaOut += 2)
+            {
+                if ((colunaOut + saltosHorizontais) < pic->width)
+                {
+                    out[indiceOut].r = in[linhaOut][colunaOut].r;
+                    out[indiceOut].g = in[linhaOut][colunaOut].g;
+                    out[indiceOut].b = in[linhaOut][colunaOut].b;
+                    indiceOut++;
+                }
+            }
         }
     }
 
-    pic->img = dadosSaida;
-    pic->width = larguraReduzida;
-    pic->height = alturaReduzida;
+    Img newPic;
+
+    newPic.width = pic->width / 2;
+    newPic.height = pic->height / 2;
+    newPic.img = out;
+
+    return newPic;
 }
 
 int main(int argc, char **argv)
@@ -249,8 +264,8 @@ int main(int argc, char **argv)
     printf("\n");
 
     int tamanhoConvertido = atoi(argv[2]);
-    reduceImage(&pic, tamanhoConvertido);
-    SOIL_save_image("outReduceImage.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+    Img newPic = reduceImage(&pic, tamanhoConvertido);
+    SOIL_save_image("outReduceImage.bmp", SOIL_SAVE_TYPE_BMP, newPic.width, newPic.height, 3, (const unsigned char *)newPic.img);
 
     convertToGreyScale(&pic);
 
@@ -266,7 +281,7 @@ int main(int argc, char **argv)
 
     printf("\n");
 
-    Img newPic = aspectCorrection(&pic);
+    newPic = aspectCorrection(&pic);
 
     writeImage(&newPic);
 
