@@ -207,39 +207,38 @@ void writeImageInPixels(Img *pic)
 
 Img reduceImage(Img *pic, int percentual)
 {
-    int saltosHorizontais = 2;
-    int saltosVerticais = 2;
+    int percentualLarguraEmPixels = pic->width * percentual / 100;
+    int percentualAlturaEmPixels = pic->height * percentual / 100;
+    int larguraReduzida = pic->width - percentualLarguraEmPixels;
+    int alturaReduzida = pic->height - percentualAlturaEmPixels;
+    int intervaloHorizontal = round(pic->width / (double)percentualLarguraEmPixels);
+    int intervaloVertical = round(pic->height / (double)percentualAlturaEmPixels);
 
     RGB(*in)
     [pic->width] = (RGB(*)[pic->width])pic->img;
-
-    int novaLargura = pic->width / 2;
-    int novaAltura = pic->height / 2;
-
-    RGB *out = malloc((novaLargura * novaAltura) * sizeof *out);
+    RGB *out = malloc((larguraReduzida * alturaReduzida) * sizeof *out);
     int indiceOut = 0;
 
-    for (int linhaOut = 0; linhaOut < pic->height / 2; linhaOut += 2)
+    for (int linha = 0; linha < pic->height; linha++)
     {
-        if ((linhaOut + saltosVerticais) < pic->height)
+        if ((linha + 1) % intervaloVertical == 0)
+            continue;
+
+        for (int coluna = 0; coluna < pic->width; coluna++)
         {
-            for (int colunaOut = 0; colunaOut < pic->width / 2; colunaOut += 2)
-            {
-                if ((colunaOut + saltosHorizontais) < pic->width)
-                {
-                    out[indiceOut].r = in[linhaOut][colunaOut].r;
-                    out[indiceOut].g = in[linhaOut][colunaOut].g;
-                    out[indiceOut].b = in[linhaOut][colunaOut].b;
-                    indiceOut++;
-                }
-            }
+            if ((coluna + 1) % intervaloHorizontal == 0)
+                continue;
+
+            out[indiceOut].r = in[linha][coluna].r;
+            out[indiceOut].g = in[linha][coluna].g;
+            out[indiceOut].b = in[linha][coluna].b;
+            indiceOut++;
         }
     }
 
     Img newPic;
-
-    newPic.width = pic->width / 2;
-    newPic.height = pic->height / 2;
+    newPic.width = larguraReduzida;
+    newPic.height = alturaReduzida;
     newPic.img = out;
 
     return newPic;
@@ -271,7 +270,7 @@ int main(int argc, char **argv)
 
     writeImageInPixels(&pic);
 
-    SOIL_save_image("outGreyScale.bmp", SOIL_SAVE_TYPE_BMP, pic.width, pic.height, 3, (const unsigned char *)pic.img);
+    SOIL_save_image("outGreyScale.bmp", SOIL_SAVE_TYPE_BMP, newPic.width, newPic.height, 3, (const unsigned char *)newPic.img);
 
     printf("Primeiros 10 pixels da imagem em escala de CINZA:\n");
     for (int i = 0; i < 10; i++)
@@ -281,7 +280,7 @@ int main(int argc, char **argv)
 
     printf("\n");
 
-    newPic = aspectCorrection(&pic);
+    newPic = aspectCorrection(&newPic);
 
     writeImage(&newPic);
 

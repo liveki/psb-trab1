@@ -4,6 +4,7 @@
     ".stylelintrc": "json",
     ".prettierrc": "json",
     "xiosbase": "c",
-    "xlocale": "c"
+    "xlocale": "c",
+    "cmath": "c"
   }
 }
